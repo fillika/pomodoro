@@ -6,10 +6,11 @@ import (
 )
 
 type App struct {
-	ctx    context.Context
-	mu     sync.Mutex
-	state  TimerState
-	stopCh chan struct{}
+	ctx        context.Context
+	mu         sync.Mutex
+	state      TimerState
+	stopCh     chan struct{}
+	forceQuit  bool
 }
 
 func NewApp() *App {
@@ -26,4 +27,5 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.startTray()
 }
