@@ -1,0 +1,19 @@
+build/bin
+node_modules
+frontend/dist
+.claude/
+
+# Go
+*.exe
+*.exe~
+
+# Wails dev artifacts
+frontend/wailsjs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
