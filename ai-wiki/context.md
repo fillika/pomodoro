@@ -7,14 +7,39 @@ _Last updated: 2026-06-09_
 Desktop Pomodoro-таймер. Цель — практика Go.
 **Stack:** Go + Wails v2 + React (TypeScript) + antd. Разработка в WSL, сборка и запуск на Windows.
 
+## Environment
+
+- Go 1.26.4, Wails v2.12.0 — в WSL
+- Dev-режим: `wails dev -browser -tags webkit2_41` (открывает Windows-браузер через wslu)
+- Windows-сборка: `wails build -platform windows/amd64` (mingw-w64 установлен)
+- Зависимости WSL: `gcc`, `pkg-config`, `libwebkit2gtk-4.1-dev`, `mingw-w64`, `wslu`
+
 ## Current State
 
-- Wails v2.12.0 установлен в WSL (`/home/amironenko/go/bin/wails`)
-- Go 1.26.4 установлен в WSL (`/usr/local/go/bin/go`)
-- Проект инициализирован: `wails init -n pomodoro -t react-ts`
-- Файлы подняты из `pomodoro/pomodoro/` в корень проекта
-- `frontend/` — чистый Vite+React+TS шаблон, antd ещё не установлен
-- npm-зависимости ещё не установлены (`npm install` не запускался)
+- Проект полностью инициализирован и работает
+- FSD-структура фронтенда создана
+- `wails dev -browser` проверен: кнопки Start/Pause вызывают Go-методы
+- `wails build` проверен: `.exe` собирается и запускается на Windows
+- antd установлен, алиасы `@/` и `@wailsjs` настроены в vite + tsconfig
+
+## Frontend Structure (FSD)
+
+```
+src/
+├── app/          # App.tsx (state-based навигация), providers, types, styles
+├── pages/        # timer/, settings/ (заглушка)
+├── features/     # timer-controls/ (Start/Pause кнопки)
+├── entities/     # timer/ (TimerState типы, TimerDisplay заглушка)
+└── shared/       # api/timer.ts (обёртки над Wails-биндингами)
+```
+
+- Навигация: `useState<Page>` в `App.tsx` (без роутера)
+- Биндинги: `@wailsjs/go/main/App` → `StartTimer()`, `PauseTimer()`
+
+## Go Structure
+
+- `app.go`: `StartTimer()` и `PauseTimer()` — заглушки с `fmt.Println`
+- `main.go`: стандартный Wails `wails.Run()`, размер окна 1024×768
 
 ## Decisions
 
@@ -27,29 +52,13 @@ Desktop Pomodoro-таймер. Цель — практика Go.
 | Настройки | Сохранять между запусками (JSON) |
 | UI-библиотека | antd |
 | Иконка трея | Статичная (смена по фазе — backlog) |
-| История сессий | Backlog |
-| Autostart с Windows | Backlog |
 | Длительности / цикл 4 pomodoro | Открыто, изучается |
-
-## Architecture Notes
-
-- Публичные методы `App` в `app.go` → автоматически доступны из React
-- Wails генерирует TS-биндинги в `frontend/wailsjs/go/` при `wails dev`/`wails build`
-- Go → React: `runtime.EventsEmit(ctx, "event-name", data)`
-- React → Go: вызов сгенерированных TS-функций
-- Хуки жизненного цикла: `OnStartup`, `OnBeforeClose` в `main.go`
-- Трей: через `OnBeforeClose` перехватываем закрытие → `runtime.WindowHide`
 
 ## Plan Progress
 
-Детальный план: `ai-wiki/plan.md`
-
-- [x] M0 Step 0.1 — Go + Wails CLI установлены
-- [x] M0 Step 0.2 — Wails-проект инициализирован
-- [ ] M0 Step 0.3 — npm install + antd (следующий шаг)
-- [ ] M0 Step 0.4 — wails dev (проверка dev-режима)
-- [ ] M1 — Core Timer (Go)
-- [ ] M2 — UI (React)
+- [x] M0 — Prerequisites & Scaffold (полностью готов)
+- [ ] M1 — Core Timer (Go): логика таймера, ticker, события
+- [ ] M2 — UI (React): отображение таймера, кнопки
 - [ ] M3 — Tray
 - [ ] M4 — Notifications
 - [ ] M5 — Settings Persistence
@@ -57,5 +66,4 @@ Desktop Pomodoro-таймер. Цель — практика Go.
 
 ## Next Step
 
-**Step 0.3**: пользователь изучает структуру проекта, задаёт вопросы.
-После — `cd frontend && npm install && npm install antd`, затем `wails dev`.
+**M1**: реализация логики таймера в Go — `TimerState`, `time.Ticker`, `EventsEmit`.
