@@ -1,4 +1,4 @@
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, theme } from 'antd'
 import type { ReactNode } from 'react'
 
 interface Props {
@@ -6,5 +6,9 @@ interface Props {
 }
 
 export const Providers = ({ children }: Props) => {
-  return <ConfigProvider>{children}</ConfigProvider>
+  return (
+    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+      {children}
+    </ConfigProvider>
+  )
 }

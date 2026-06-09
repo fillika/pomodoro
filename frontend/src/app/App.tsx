@@ -12,7 +12,7 @@ export const App = () => {
     <Providers>
       <Layout page={page} onNavigate={setPage}>
         {page === 'timer' && <TimerPage onNavigate={setPage} />}
-        {page === 'settings' && <SettingsPage onNavigate={setPage} />}
+        {page === 'settings' && <SettingsPage />}
       </Layout>
     </Providers>
   )
