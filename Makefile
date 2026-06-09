@@ -1,10 +1,15 @@
+WAILS := $(HOME)/go/bin/wails
+
 dev:
-	wails dev -browser -tags webkit2_41
+	$(WAILS) dev -browser -tags webkit2_41
 
 build-windows:
-	wails build -platform windows/amd64
+	$(WAILS) build -platform windows/amd64
 
 build-linux:
-	wails build -platform linux/amd64
+	$(WAILS) build -platform linux/amd64
 
-.PHONY: dev build-windows build-linux
+format:
+	cd frontend && npm run format
+
+.PHONY: dev build-windows build-linux format

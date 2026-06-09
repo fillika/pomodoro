@@ -3,15 +3,14 @@ import { Providers } from '@/app/providers'
 import { Layout } from '@/app/layout'
 import { TimerPage } from '@/pages/timer'
 import { SettingsPage } from '@/pages/settings'
-
-type Page = 'timer' | 'settings'
+import type { Page } from '@/app/types'
 
 export const App = () => {
   const [page, setPage] = useState<Page>('timer')
 
   return (
     <Providers>
-      <Layout>
+      <Layout page={page} onNavigate={setPage}>
         {page === 'timer' && <TimerPage onNavigate={setPage} />}
         {page === 'settings' && <SettingsPage onNavigate={setPage} />}
       </Layout>
