@@ -20,12 +20,12 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:     "Pomo",
-		Width:     500,
-		Height:    500,
-		MinWidth:  500,
-		MinHeight: 500,
-		MaxWidth:  500,
-		MaxHeight: 500,
+		Width:     400,
+		Height:    400,
+		MinWidth:  400,
+		MinHeight: 400,
+		MaxWidth:  400,
+		MaxHeight: 400,
 		DisableResize: true,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
