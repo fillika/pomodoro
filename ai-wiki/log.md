@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-06-09 — Session 4: Go Timer + Frontend Connect (M2 complete)
+
+- `timer.go`: TimerStatus/Phase/State типы, горутина time.Ticker, sync.Mutex, tick()
+- Go-методы: StartFocus, Pause, Resume, StartBreak, SkipBreak, Complete, GetState
+- События: `timer:tick` (каждую секунду + при переходах), `timer:done` (для M4)
+- `app.go` обновлён: поля mu/state/stopCh, NewApp инициализирует стейт (idle, 30 мин)
+- `main.go`: `DisableResize: true` (правильное поле в v2.12, убирает кнопку разворачивания)
+- Фронт подключён: `useState` + `EventsOn('timer:tick')` + `GetState()` при монте
+- `shared/api/timer.ts` обновлён — реэкспорт Go-биндингов
+- Редьюсер (`pages/timer/model/reducer.ts`) удалён, Go — источник истины
+- Хранение настроек: решено использовать JSON в `%APPDATA%\Pomo\` (установленное приложение)
+- Планируется инсталлятор (NSIS/WiX) как эксперимент
+
+---
+
 ## 2026-06-09 — Session 3: Frontend Timer UI (M1 complete)
 
 - Toolbar: styled-components (`styled.ts`), компактный header 36px, antd dark theme включён через ConfigProvider

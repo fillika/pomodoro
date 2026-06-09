@@ -10,88 +10,88 @@ Desktop Pomodoro-таймер. Цель — практика Go.
 ## Environment
 
 - Go 1.23 (go.mod), Wails v2.12.0 — в WSL
-- Dev-режим: `wails dev -browser -tags webkit2_41` (make dev)
-- Windows-сборка: `wails build -platform windows/amd64` (make build-windows)
+- Dev-режим: `make dev` → `wails dev -browser -tags webkit2_41`
+- Windows-сборка: `make build-windows`
 - GitHub Actions: push to main → сборка win/linux → release `latest`
-- Зависимости WSL: gcc, pkg-config, libwebkit2gtk-4.1-dev, mingw-w64, wslu
+- Go binary: `/usr/local/go/bin/go`, Wails: `~/go/bin/wails`
 
 ## Current State
 
-- M0 + M0.5 полностью завершены
-- M1 (Frontend) завершён: стейт-машина, таймер, кнопки — всё работает на моках
-- Следующий шаг: M2 — Go-таймер (time.Ticker, EventsEmit, замена мок-тика)
+- M0, M0.5, M1, M2 завершены
+- Фронт подключён к Go: `EventsOn('timer:tick')`, `GetState()`, все Go-методы
+- Следующий шаг: M3 — системный трей
 
 ## Frontend Structure (FSD)
 
 ```
 src/
-├── app/          # App.tsx, providers (antd dark), layout (Header+Content), types
+├── app/          # App.tsx, providers (antd dark), layout, types
 ├── pages/
-│   ├── timer/    # TimerPage + useReducer + мок-тик
-│   │   └── model/reducer.ts  # timerReducer, TimerAction
-│   └── settings/ # SettingsPage (форма + кнопка-дискета)
+│   ├── timer/    # TimerPage — useState + EventsOn + Go-методы
+│   └── settings/ # SettingsPage (форма + кнопка-дискета, пока DEFAULT_SETTINGS)
 ├── features/
 │   └── timer-controls/  # TimerControls, SplitButton (styled.ts)
 ├── entities/
-│   └── timer/    # TimerDisplay, types, transitions
+│   └── timer/    # TimerDisplay (88px fixed), types, transitions
 └── shared/
-    ├── api/timer.ts
-    └── config/settings.ts  # Settings, DEFAULT_SETTINGS
+    ├── api/timer.ts      # реэкспорт Go-биндингов
+    └── config/settings.ts
 ```
 
-## State Machine (Frontend)
+## State Machine
 
 ```
 idle → focusing → focus_done → on_break → break_done → focusing...
          ↕ pause/resume            ↕ pause/resume
 ```
 
-| Состояние   | Кнопки                              |
-|-------------|-------------------------------------|
-| idle        | [Начать \| 30 мин▾]                 |
-| focusing    | [Пауза] [Завершить]                 |
-| paused      | [Продолжить] [Завершить]            |
-| focus_done  | [Перерыв] [Фокус]                   |
-| on_break    | [Пауза] [Завершить]                 |
-| break_done  | [Начать \| 30 мин▾]                 |
+| Состояние  | Кнопки                       |
+|------------|------------------------------|
+| idle       | [Начать \| 30 мин▾]          |
+| focusing   | [Пауза] [Завершить]          |
+| paused     | [Продолжить] [Завершить]     |
+| focus_done | [Перерыв] [Фокус]            |
+| on_break   | [Пауза] [Завершить]          |
+| break_done | [Начать \| 30 мин▾]          |
 
-## Actions (reducer)
+## Go Structure
 
-`START(duration)`, `PAUSE`, `RESUME`, `TICK`, `COMPLETE`, `START_BREAK(phase, duration)`, `SKIP_BREAK(duration)`
+```
+app.go     — App struct (ctx, mu, state, stopCh), NewApp, startup
+timer.go   — TimerStatus/Phase/State типы, все методы, горутина
+main.go    — wails.Run, 500×500, DisableResize: true
+```
+
+**Методы (экспортированы в Wails):**
+`StartFocus(duration int)`, `Pause()`, `Resume()`, `StartBreak(phase, duration)`, `SkipBreak(duration)`, `Complete()`, `GetState()`
+
+**События:** `timer:tick` (каждую секунду + при переходах), `timer:done` (естественное завершение фазы, для M4)
 
 ## Decisions
 
 | Тема | Решение |
 |---|---|
 | Название | Pomo (окно), "Фокус" (UI) |
-| Окно | 500×500, Resizable: false (в go.mod уже есть, в v2.12 не работает — Min=Max вместо) |
+| Окно | 500×500, `DisableResize: true` (убирает кнопку разворачивания) |
 | Длительности | Фокус: 30 мин, короткий: 5, длинный: 15 |
 | Цикл | 4 сессии → длинный перерыв, счётчик сбрасывается |
-| Автостарт | Нет — ждём пользователя |
-| Кастом длительность | One-shot (правая часть сплит-кнопки) |
-| Пауза | Вместо "Начать", работает в фокусе и перерыве |
-| Хранение настроек | SQLite (пока DEFAULT_SETTINGS) |
-| Уведомления | Windows toast по окончании фазы |
+| Автостарт | Нет |
+| Кастом длительность | One-shot через правую часть сплит-кнопки |
+| Хранение настроек | JSON в `%APPDATA%\Pomo\settings.json` (portable отклонён — цель установка) |
+| Уведомления | Windows toast при `timer:done` |
 | Звук | Не нужен |
-| Тема | antd dark algorithm |
-| prettier | Установлен, `make format` |
-
-## Go Structure
-
-- `app.go`: `StartTimer()` и `PauseTimer()` — заглушки
-- `main.go`: Wails run, 500×500, `Resizable: false` (поле есть в go файле, но игнорируется v2.12)
 
 ## Plan Progress
 
-- [x] M0 — Prerequisites & Scaffold
-- [x] M0.5 — Layout, toolbar, settings UI, DEFAULT_SETTINGS
-- [x] M1 — Frontend Timer UI (моки)
-- [ ] M2 — Core Timer (Go): TimerState, Ticker, EventsEmit
-- [ ] M3 — Tray
-- [ ] M4 — Notifications
-- [ ] M5 — Settings Persistence (SQLite)
+- [x] M0 — Scaffold
+- [x] M0.5 — Layout, toolbar, settings UI
+- [x] M1 — Frontend Timer UI
+- [x] M2 — Go Timer (timer.go, горутина, EventsEmit, подключение фронта)
+- [ ] M3 — Tray (крестик → трей, Quit)
+- [ ] M4 — Notifications (toast при timer:done)
+- [ ] M5 — Settings Persistence (JSON в %APPDATA%)
 - [ ] M6 — Polish & Build
 
 ## Next Step
 
-**M2**: реализация Go-таймера — `TimerState` struct, `time.Ticker` в горутине, `runtime.EventsEmit`, методы `StartFocus(duration)`, `Pause()`, `Resume()`, `StartBreak()`, `SkipBreak()`, `Complete()`. Затем подключить фронт (заменить мок-тик на `EventsOn("timer:tick")`).
+**M3**: системный трей — иконка, меню (Show/Quit), `OnBeforeClose` → `WindowHide`.

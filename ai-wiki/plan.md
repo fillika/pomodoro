@@ -11,117 +11,95 @@ Desktop Pomodoro-таймер на **Go + Wails v2 + React + antd**.
 
 | Тема | Решение |
 |---|---|
-| Название приложения | Pomo |
-| Окно | 500×500, фиксированный размер (Min=Max) |
-| Длительности по умолчанию | Основной: 30 мин, короткий перерыв: 5, длинный: 15 |
-| Длина цикла | 4 pomodoro → длинный перерыв, счётчик сбрасывается |
-| Автостарт следующей фазы | Нет — ждём действия пользователя |
-| После окончания фокуса | Кнопки: «Начать перерыв» и «Следующий цикл» |
-| Кастомная длительность | One-shot переопределение через правую часть сплит-кнопки |
-| Пауза | Заменяет кнопку «Начать», работает в фокусе и перерыве |
+| Название | Pomo (окно), "Фокус" (UI) |
+| Окно | 500×500, `DisableResize: true` |
+| Длительности | Фокус: 30 мин, короткий: 5, длинный: 15 |
+| Цикл | 4 сессии → длинный перерыв, счётчик сбрасывается |
+| Автостарт | Нет |
+| Кастом длительность | One-shot через правую часть сплит-кнопки |
 | Закрытие окна | Крестик → трей |
-| Уведомления | Windows toast по окончании фазы |
+| Уведомления | Windows toast при `timer:done` |
 | Звук | Не нужен |
-| Тема | antd dark algorithm |
-| Хранение настроек | SQLite (пока DEFAULT_SETTINGS-константы) |
+| Хранение настроек | JSON в `%APPDATA%\Pomo\settings.json` |
+| Установка | Цель — установленное приложение (не portable) |
 
 ## State Machine
 
-```
-idle → focusing → focus_done → on_break → break_done → focusing...
-         ↕ pause/resume            ↕ pause/resume
-      paused_focus              paused_break
-```
-
-| Состояние | Заголовок | Кнопки |
-|---|---|---|
-| `idle` | — | [Начать \| 30 мин▾] |
-| `focusing` | Работа 2/4 + время | [Пауза] |
-| `paused` | Работа 2/4 (пауза) + время | [Продолжить] |
-| `focus_done` | Работа завершена | [Начать перерыв] [Следующий цикл] |
-| `on_break` | Короткий/Длинный перерыв + время | [Пауза] |
-| `break_done` | Перерыв завершён | [Начать \| 30 мин▾] |
+| Состояние  | Заголовок              | Кнопки                       |
+|------------|------------------------|------------------------------|
+| idle       | —                      | [Начать \| 30 мин▾]          |
+| focusing   | Фокус 2/4 + время      | [Пауза] [Завершить]          |
+| paused     | Фокус 2/4 (пауза)      | [Продолжить] [Завершить]     |
+| focus_done | Фокус завершён         | [Перерыв] [Фокус]            |
+| on_break   | Короткий/Длинный + время | [Пауза] [Завершить]        |
+| break_done | Перерыв завершён       | [Начать \| 30 мин▾]          |
 
 ---
 
 ## Milestones
 
 ### ✅ M0 — Prerequisites & Scaffold
-- Go 1.23 + Wails v2.12.0 в WSL
-- React + TypeScript + antd (dark theme)
-- FSD-структура фронта
+- Go 1.23 + Wails v2.12.0, FSD-структура, antd dark theme
 - `wails dev -browser` и `wails build` работают
-- GitHub Actions: сборка Windows + Linux → release `latest`
+- GitHub Actions: push to main → build win/linux → release `latest`
 
 ### ✅ M0.5 — Layout & Settings UI
-- Toolbar с навигацией (Главная / Настройки)
-- Settings page: поля из DEFAULT_SETTINGS, кнопка-дискета (dirty state)
-- `shared/config/settings.ts`: `Settings` тип + `DEFAULT_SETTINGS`
-- Scroll в content при переполнении
+- Toolbar (styled-components), навигация Главная/Настройки
+- Settings page: форма + кнопка-дискета, `DEFAULT_SETTINGS`
+- Scroll, фиксированное окно 500×500
 
----
+### ✅ M1 — Frontend Timer UI
+- Типы: `TimerStatus`, `TimerPhase`, `TimerState`
+- Transitions: `getBreakPhase`, `getBreakDuration`, `getInitialState`, `formatTime`, `getPhaseLabel`
+- `TimerDisplay` (88px fixed height), `TimerControls`, `SplitButton`
+- Полная стейт-машина через `useReducer` + мок-тик
 
-### 🔄 M1 — Frontend Timer UI (моки, без Go)
-
-- [ ] **1.1** — `entities/timer/model/state.ts`
-  Тип `TimerState`: `phase`, `status`, `remaining`, `cycleIndex`, `cycleLength`
-  Тип `TimerStatus`: `idle | focusing | paused | focus_done | on_break | break_done`
-  Тип `TimerPhase`: `focus | short_break | long_break`
-
-- [ ] **1.2** — `entities/timer/model/transitions.ts`
-  Чистые функции: `getNextPhase(cycleIndex, cycleLength)`, `getBreakDuration(phase, settings)`, `formatTime(seconds)`
-
-- [ ] **1.3** — `features/timer-controls` — сплит-кнопка
-  Левая часть: «Начать» / «Пойти на перерыв» / «Следующий цикл» / «Продолжить»
-  Правая часть: длительность с popover для one-shot переопределения
-
-- [ ] **1.4** — `entities/timer/ui/TimerDisplay`
-  Заголовок фазы («Работа 2/4», «Короткий перерыв»)
-  Время MM:SS на отдельной строке, крупнее
-
-- [ ] **1.5** — `pages/timer` — сборка всего
-  Стейт-машина через `useReducer`
-  Моковый `useEffect`-тик (каждую секунду --remaining)
-
----
-
-### M2 — Core Timer (Go)
-
-- [ ] **2.1** — `app.go`: `TimerState` struct, `StartFocus(duration int)`, `Pause()`, `Resume()`, `StartBreak()`, `SkipBreak()`
-- [ ] **2.2** — `time.Ticker` в горутине, `runtime.EventsEmit(ctx, "timer:tick", state)`
-- [ ] **2.3** — Подключение фронта к Go: заменить мок на Wails bindings + `EventsOn("timer:tick")`
+### ✅ M2 — Core Timer (Go) + подключение фронта
+- `timer.go`: типы, горутина `time.Ticker`, mutex, `tick()`
+- Методы: `StartFocus`, `Pause`, `Resume`, `StartBreak`, `SkipBreak`, `Complete`, `GetState`
+- События: `timer:tick` (каждую секунду), `timer:done` (естественное завершение)
+- Фронт: `useState` + `EventsOn('timer:tick')` + `GetState()` при монте
+- Редьюсер удалён, Go — источник истины
 
 ---
 
 ### M3 — Tray
 
-- [ ] **3.1** — Иконка трея, меню (Show / Quit)
+- [ ] **3.1** — Иконка трея + меню (Show / Quit)
+  - Wails встроенный tray API или `github.com/getlantern/systray`
+  - Embed иконки (PNG/ICO)
 - [ ] **3.2** — `OnBeforeClose` → `runtime.WindowHide`
 
 ---
 
 ### M4 — Notifications
 
-- [ ] **4.1** — Windows toast при `timer:done` (go-toast или beeep)
+- [ ] **4.1** — Windows toast при `timer:done`
+  - `github.com/go-toast/toast` или `github.com/gen2brain/beeep`
+  - Подписка на `timer:done` внутри Go
 
 ---
 
 ### M5 — Settings Persistence
 
-- [ ] **5.1** — SQLite в Go (`%APPDATA%/pomo/pomo.db`)
-- [ ] **5.2** — `GetSettings()` / `SaveSettings()` → подключить к Settings page (убрать мок)
+- [ ] **5.1** — `settings.go`: чтение/запись `%APPDATA%\Pomo\settings.json`
+  - `os.UserConfigDir()` для пути
+  - `GetSettings() Settings`, `SaveSettings(s Settings)`
+- [ ] **5.2** — Подключить к фронту: Settings page вызывает `GetSettings`/`SaveSettings`
+- [ ] **5.3** — При старте Go загружает настройки и инициализирует таймер с ними
 
 ---
 
 ### M6 — Polish & Build
 
-- [ ] **6.1** — Иконка приложения (заменить дефолтную Wails)
-- [ ] **6.2** — Финальный тест `.exe` на Windows
+- [ ] **6.1** — Иконка приложения (заменить дефолтную Wails в `build/`)
+- [ ] **6.2** — Инсталлятор (NSIS или WiX) — эксперимент
+- [ ] **6.3** — Финальный тест `.exe` на Windows
 
 ---
 
 ## Backlog
 
 - Смена иконки трея по фазе
-- История сессий (статистика за день)
+- История сессий (`%APPDATA%\Pomo\history.db`)
 - Автозапуск с Windows
