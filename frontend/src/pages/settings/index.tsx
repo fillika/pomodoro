@@ -13,7 +13,7 @@ import {
 } from './styled'
 
 const FIELDS: { key: keyof Settings; label: string; unit: string }[] = [
-  { key: 'pomodoroDuration', label: 'Помодоро', unit: 'мин' },
+  { key: 'pomodoroDuration', label: 'Основной таймер', unit: 'мин' },
   { key: 'shortBreakDuration', label: 'Короткий перерыв', unit: 'мин' },
   { key: 'longBreakDuration', label: 'Длинный перерыв', unit: 'мин' },
   { key: 'cycleLength', label: 'Длина цикла', unit: 'шт' },
