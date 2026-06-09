@@ -6,9 +6,5 @@ interface Props {
 }
 
 export const Providers = ({ children }: Props) => {
-  return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-      {children}
-    </ConfigProvider>
-  )
+  return <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>{children}</ConfigProvider>
 }
