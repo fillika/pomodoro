@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-06-09 — Session 6: Notifications (M4 complete)
+
+- `notify_windows.go`: `initNotifications()` — `SetAppData("Pomo")` + `SetActivationCallback`; `sendNotification(phase)` — toast с 1 кнопкой
+- `notify_linux.go`: пустые заглушки (паттерн filename-конвенции как у tray_*.go)
+- `timer.go`: добавлены константы `defaultFocusDuration/ShortBreak/LongBreakDuration`; `tick()` вызывает `go a.sendNotification(phase)` при завершении фазы
+- `app.go`: `startup()` вызывает `initNotifications()` перед `startTray()`; `NewApp` использует `defaultFocusDuration` вместо литерала
+- `go.mod`: `go-toast/v2` перенесён из indirect в direct
+- Поведение callback: `"start_break"` → `StartBreak` (гвард StatusFocusDone), `"start_focus"` → `StartFocus` (гвард StatusBreakDone), иное → `WindowShow`
+- Сборка `.exe` + копирование в `C:\Users\mironenko.av\Downloads\pomo.exe`
+- Команда сборки: `GOPATH=$HOME/go PATH=$PATH:/usr/local/go/bin make build-windows` (go не в PATH по умолчанию)
+- M4 завершён
+
+---
+
 ## 2026-06-09 — Session 5: System Tray (M3 complete)
 
 - Заменена библиотека трея: `getlantern/systray` → `energye/systray v1.0.1`

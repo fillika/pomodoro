@@ -1,6 +1,6 @@
 # Pomo App — Plan
 
-_Last updated: 2026-06-09 (Session 5)_
+_Last updated: 2026-06-09 (Session 6)_
 
 ## Summary
 
@@ -73,11 +73,12 @@ Desktop Pomodoro-таймер на **Go + Wails v2 + React + antd**.
 
 ---
 
-### M4 — Notifications
+### ✅ M4 — Notifications
 
-- [ ] **4.1** — Windows toast при `timer:done`
-  - `git.sr.ht/~jackmordaunt/go-toast/v2` уже в go.mod как indirect dep Wails — можно использовать без новой зависимости
-  - Подписка на `timer:done` внутри Go (`app.go` или отдельный `notify_windows.go`)
+- [x] **4.1** — Windows toast при `timer:done`
+  - `notify_windows.go` + `notify_linux.go` (заглушка)
+  - `go-toast/v2` — direct dep; `SetAppData("Pomo")` + `SetActivationCallback` в `startup()`
+  - 1 кнопка в toast: "Начать перерыв" / "Начать фокус"; клик по телу → `WindowShow`; крестик → ничего
 
 ---
 
