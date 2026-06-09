@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-06-09 — Session 5: System Tray (M3 complete)
+
+- Заменена библиотека трея: `getlantern/systray` → `energye/systray v1.0.1`
+  - Причина: getlantern не имеет `RunWithExternalLoop`, конфликтует с WebView2 message loop
+  - energye запускает Win32 message pump в отдельной горутине через `nativeStart()`
+- Иконка трея: `appicon.png` → `build/windows/icon.ico` (Win32 `LoadImage` требует ICO)
+- API отличается: `.ClickedCh` → `.Click(fn func())`
+- `SetOnDClick` — двойной клик по иконке открывает окно
+- `forceQuit bool` в App + проверка в `OnBeforeClose`: крестик → WindowHide, Выход → реальный quit
+- `libayatana-appindicator3-dev` убрана из release.yml (была для getlantern/systray на Linux)
+- M3 завершён, .exe работает: иконка, меню, открыть, выход
+
+---
+
 ## 2026-06-09 — Session 4: Go Timer + Frontend Connect (M2 complete)
 
 - `timer.go`: TimerStatus/Phase/State типы, горутина time.Ticker, sync.Mutex, tick()

@@ -17,9 +17,9 @@ Desktop Pomodoro-таймер. Цель — практика Go.
 
 ## Current State
 
-- M0, M0.5, M1, M2 завершены
-- Фронт подключён к Go: `EventsOn('timer:tick')`, `GetState()`, все Go-методы
-- Следующий шаг: M3 — системный трей
+- M0, M0.5, M1, M2, M3 завершены
+- Системный трей работает: иконка, меню (Открыть/Выход), двойной клик открывает окно
+- Следующий шаг: M4 — Windows toast-уведомления при `timer:done`
 
 ## Frontend Structure (FSD)
 
@@ -57,15 +57,25 @@ idle → focusing → focus_done → on_break → break_done → focusing...
 ## Go Structure
 
 ```
-app.go     — App struct (ctx, mu, state, stopCh), NewApp, startup
-timer.go   — TimerStatus/Phase/State типы, все методы, горутина
-main.go    — wails.Run, 500×500, DisableResize: true
+app.go          — App struct (ctx, mu, state, stopCh, forceQuit), NewApp, startup
+timer.go        — TimerStatus/Phase/State типы, все методы, горутина
+main.go         — wails.Run, 500×500, DisableResize: true, OnBeforeClose (hide/quit)
+tray_windows.go — energye/systray: иконка .ico, меню, двойной клик
+tray_linux.go   — заглушка (пустой startTray)
 ```
 
 **Методы (экспортированы в Wails):**
 `StartFocus(duration int)`, `Pause()`, `Resume()`, `StartBreak(phase, duration)`, `SkipBreak(duration)`, `Complete()`, `GetState()`
 
 **События:** `timer:tick` (каждую секунду + при переходах), `timer:done` (естественное завершение фазы, для M4)
+
+## Tray Implementation
+
+- Библиотека: `github.com/energye/systray v1.0.1` (форк для webview-фреймворков)
+- Запуск: `RunWithExternalLoop` — message loop в отдельной горутине, не конфликтует с WebView2
+- Иконка: `build/windows/icon.ico` (ICO обязателен для Windows, PNG не работает)
+- `forceQuit bool` в App — флаг для разделения "крестик → WindowHide" и "Выход из меню → реальный выход"
+- `SetOnDClick` — двойной клик по иконке открывает окно
 
 ## Decisions
 
@@ -87,11 +97,7 @@ main.go    — wails.Run, 500×500, DisableResize: true
 - [x] M0.5 — Layout, toolbar, settings UI
 - [x] M1 — Frontend Timer UI
 - [x] M2 — Go Timer (timer.go, горутина, EventsEmit, подключение фронта)
-- [ ] M3 — Tray (крестик → трей, Quit)
+- [x] M3 — Tray (крестик → трей, Quit)
 - [ ] M4 — Notifications (toast при timer:done)
 - [ ] M5 — Settings Persistence (JSON в %APPDATA%)
 - [ ] M6 — Polish & Build
-
-## Next Step
-
-**M3**: системный трей — иконка, меню (Show/Quit), `OnBeforeClose` → `WindowHide`.

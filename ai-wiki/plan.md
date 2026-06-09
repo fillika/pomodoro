@@ -1,6 +1,6 @@
 # Pomo App — Plan
 
-_Last updated: 2026-06-09_
+_Last updated: 2026-06-09 (Session 5)_
 
 ## Summary
 
@@ -63,20 +63,21 @@ Desktop Pomodoro-таймер на **Go + Wails v2 + React + antd**.
 
 ---
 
-### M3 — Tray
+### ✅ M3 — Tray
 
-- [ ] **3.1** — Иконка трея + меню (Show / Quit)
-  - Wails встроенный tray API или `github.com/getlantern/systray`
-  - Embed иконки (PNG/ICO)
-- [ ] **3.2** — `OnBeforeClose` → `runtime.WindowHide`
+- `energye/systray v1.0.1` — форк для webview, message loop в отдельной горутине
+- Иконка: `build/windows/icon.ico` (embed), меню: Открыть / Выход
+- Двойной клик по иконке → `WindowShow`
+- `forceQuit bool` в App: крестик → WindowHide, Выход → реальный quit
+- `tray_linux.go` — пустая заглушка; `libayatana-appindicator3-dev` убрана из CI
 
 ---
 
 ### M4 — Notifications
 
 - [ ] **4.1** — Windows toast при `timer:done`
-  - `github.com/go-toast/toast` или `github.com/gen2brain/beeep`
-  - Подписка на `timer:done` внутри Go
+  - `git.sr.ht/~jackmordaunt/go-toast/v2` уже в go.mod как indirect dep Wails — можно использовать без новой зависимости
+  - Подписка на `timer:done` внутри Go (`app.go` или отдельный `notify_windows.go`)
 
 ---
 

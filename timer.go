@@ -24,7 +24,12 @@ const (
 	PhaseLongBreak  TimerPhase = "long_break"
 )
 
-const defaultCycleLength = 4
+const (
+	defaultCycleLength        = 4
+	defaultFocusDuration      = 30 * 60
+	defaultShortBreakDuration = 5 * 60
+	defaultLongBreakDuration  = 15 * 60
+)
 
 type TimerState struct {
 	Status      TimerStatus `json:"status"`
@@ -202,6 +207,7 @@ func (a *App) tick() {
 
 	if done {
 		a.resetTicker()
+		go a.sendNotification(phase)
 		runtime.EventsEmit(a.ctx, "timer:done", phase)
 	}
 	runtime.EventsEmit(a.ctx, "timer:tick", state)

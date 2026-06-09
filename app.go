@@ -6,10 +6,11 @@ import (
 )
 
 type App struct {
-	ctx    context.Context
-	mu     sync.Mutex
-	state  TimerState
-	stopCh chan struct{}
+	ctx        context.Context
+	mu         sync.Mutex
+	state      TimerState
+	stopCh     chan struct{}
+	forceQuit  bool
 }
 
 func NewApp() *App {
@@ -17,7 +18,7 @@ func NewApp() *App {
 		state: TimerState{
 			Status:      StatusIdle,
 			Phase:       PhaseFocus,
-			Remaining:   30 * 60,
+			Remaining:   defaultFocusDuration,
 			CycleIndex:  0,
 			CycleLength: defaultCycleLength,
 		},
@@ -26,4 +27,6 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.initNotifications()
+	a.startTray()
 }
