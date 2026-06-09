@@ -1,35 +1,37 @@
-import { useReducer, useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { EventsOn } from '@wailsjs/runtime/runtime'
 import { TimerDisplay, getBreakPhase, getBreakDuration, getInitialState } from '@/entities/timer'
 import { TimerControls } from '@/features/timer-controls'
+import { StartFocus, Pause, Resume, StartBreak, SkipBreak, Complete, GetState } from '@/shared/api/timer'
 import { DEFAULT_SETTINGS } from '@/shared/config'
-import { timerReducer } from './model/reducer'
+import type { TimerState } from '@/entities/timer'
 import { PageRoot } from './styled'
 
 export const TimerPage = () => {
   const settings = DEFAULT_SETTINGS
-  const [state, dispatch] = useReducer(timerReducer, getInitialState(settings))
+  const [state, setState] = useState<TimerState>(getInitialState(settings))
   const [customDuration, setCustomDuration] = useState<number | null>(null)
 
   useEffect(() => {
-    if (state.status !== 'focusing' && state.status !== 'on_break') return
-    const id = setInterval(() => dispatch({ type: 'TICK' }), 1000)
-    return () => clearInterval(id)
-  }, [state.status])
+    GetState().then((s) => setState(s as unknown as TimerState))
+    const off = EventsOn('timer:tick', (s: TimerState) => setState(s))
+    return off
+  }, [])
 
   const displayDuration = customDuration ?? settings.pomodoroDuration
 
   const handleStart = () => {
-    dispatch({ type: 'START', duration: displayDuration * 60 })
+    StartFocus(displayDuration * 60)
     setCustomDuration(null)
   }
 
   const handleStartBreak = () => {
     const phase = getBreakPhase(state.cycleIndex, state.cycleLength)
-    dispatch({ type: 'START_BREAK', phase, duration: getBreakDuration(phase, settings) })
+    StartBreak(phase, getBreakDuration(phase, settings))
   }
 
   const handleSkipBreak = () => {
-    dispatch({ type: 'SKIP_BREAK', duration: displayDuration * 60 })
+    SkipBreak(displayDuration * 60)
     setCustomDuration(null)
   }
 
@@ -41,9 +43,9 @@ export const TimerPage = () => {
         phase={state.phase}
         duration={displayDuration}
         onStart={handleStart}
-        onPause={() => dispatch({ type: 'PAUSE' })}
-        onResume={() => dispatch({ type: 'RESUME' })}
-        onComplete={() => dispatch({ type: 'COMPLETE' })}
+        onPause={() => Pause()}
+        onResume={() => Resume()}
+        onComplete={() => Complete()}
         onStartBreak={handleStartBreak}
         onSkipBreak={handleSkipBreak}
         onDurationChange={setCustomDuration}
