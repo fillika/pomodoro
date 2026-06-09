@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Providers } from '@/app/providers'
+import { Layout } from '@/app/layout'
 import { TimerPage } from '@/pages/timer'
 import { SettingsPage } from '@/pages/settings'
 
@@ -10,8 +11,10 @@ export const App = () => {
 
   return (
     <Providers>
-      {page === 'timer' && <TimerPage onNavigate={setPage} />}
-      {page === 'settings' && <SettingsPage onNavigate={setPage} />}
+      <Layout>
+        {page === 'timer' && <TimerPage onNavigate={setPage} />}
+        {page === 'settings' && <SettingsPage onNavigate={setPage} />}
+      </Layout>
     </Providers>
   )
 }
