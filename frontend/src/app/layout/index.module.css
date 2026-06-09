@@ -1,5 +1,5 @@
 .layout {
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .header {
@@ -10,8 +10,10 @@
   background: rgba(20, 29, 42, 1) !important;
   padding: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .content {
   padding: 24px;
+  overflow-y: auto;
 }
