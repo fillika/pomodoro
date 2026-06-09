@@ -1,9 +1,11 @@
-export type TimerPhase = 'work' | 'short-break' | 'long-break'
+export type TimerPhase = 'focus' | 'short_break' | 'long_break'
 
-export type TimerStatus = 'idle' | 'running' | 'paused'
+export type TimerStatus = 'idle' | 'focusing' | 'paused' | 'focus_done' | 'on_break' | 'break_done'
 
 export interface TimerState {
-  phase: TimerPhase
   status: TimerStatus
+  phase: TimerPhase
   remaining: number
+  cycleIndex: number
+  cycleLength: number
 }

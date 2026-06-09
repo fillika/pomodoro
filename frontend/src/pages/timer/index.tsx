@@ -1,38 +1,55 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { EventsOn } from '@wailsjs/runtime/runtime'
+import { TimerDisplay, getBreakPhase, getBreakDuration, getInitialState } from '@/entities/timer'
 import { TimerControls } from '@/features/timer-controls'
-import { startTimer, pauseTimer } from '@/shared/api/timer'
-import type { Page } from '@/app/types'
-import type { TimerStatus } from '@/entities/timer'
+import { StartFocus, Pause, Resume, StartBreak, SkipBreak, Complete, GetState } from '@/shared/api/timer'
+import { DEFAULT_SETTINGS } from '@/shared/config'
+import type { TimerState } from '@/entities/timer'
+import { PageRoot } from './styled'
 
-interface Props {
-  onNavigate: (page: Page) => void
-}
+export const TimerPage = () => {
+  const settings = DEFAULT_SETTINGS
+  const [state, setState] = useState<TimerState>(getInitialState(settings))
+  const [customDuration, setCustomDuration] = useState<number | null>(null)
 
-export const TimerPage = ({ onNavigate }: Props) => {
-  const [status, setStatus] = useState<TimerStatus>('idle')
+  useEffect(() => {
+    GetState().then((s) => setState(s as unknown as TimerState))
+    const off = EventsOn('timer:tick', (s: TimerState) => setState(s))
+    return off
+  }, [])
 
-  const handleStart = async () => {
-    await startTimer()
-    setStatus('running')
+  const displayDuration = customDuration ?? settings.pomodoroDuration
+
+  const handleStart = () => {
+    StartFocus(displayDuration * 60)
+    setCustomDuration(null)
   }
 
-  const handlePause = async () => {
-    await pauseTimer()
-    setStatus('paused')
+  const handleStartBreak = () => {
+    const phase = getBreakPhase(state.cycleIndex, state.cycleLength)
+    StartBreak(phase, getBreakDuration(phase, settings))
   }
 
-  const handleReset = () => {
-    setStatus('idle')
+  const handleSkipBreak = () => {
+    SkipBreak(displayDuration * 60)
+    setCustomDuration(null)
   }
 
   return (
-    <div>
+    <PageRoot>
+      <TimerDisplay state={state} />
       <TimerControls
-        status={status}
+        status={state.status}
+        phase={state.phase}
+        duration={displayDuration}
         onStart={handleStart}
-        onPause={handlePause}
-        onReset={handleReset}
+        onPause={() => Pause()}
+        onResume={() => Resume()}
+        onComplete={() => Complete()}
+        onStartBreak={handleStartBreak}
+        onSkipBreak={handleSkipBreak}
+        onDurationChange={setCustomDuration}
       />
-    </div>
+    </PageRoot>
   )
 }

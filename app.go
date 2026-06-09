@@ -2,31 +2,28 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"sync"
 )
 
-// App struct
 type App struct {
-	ctx context.Context
+	ctx    context.Context
+	mu     sync.Mutex
+	state  TimerState
+	stopCh chan struct{}
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		state: TimerState{
+			Status:      StatusIdle,
+			Phase:       PhaseFocus,
+			Remaining:   30 * 60,
+			CycleIndex:  0,
+			CycleLength: defaultCycleLength,
+		},
+	}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-}
-
-func (a *App) StartTimer() string {
-	fmt.Println("StartTimer called")
-	return "started"
-}
-
-func (a *App) PauseTimer() string {
-	fmt.Println("PauseTimer called")
-	return "paused"
 }

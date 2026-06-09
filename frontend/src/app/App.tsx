@@ -11,7 +11,7 @@ export const App = () => {
   return (
     <Providers>
       <Layout page={page} onNavigate={setPage}>
-        {page === 'timer' && <TimerPage onNavigate={setPage} />}
+        {page === 'timer' && <TimerPage />}
         {page === 'settings' && <SettingsPage />}
       </Layout>
     </Providers>

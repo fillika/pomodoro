@@ -26,7 +26,9 @@ export const SaveButton = styled.button<{ $dirty: boolean }>`
   color: ${({ $dirty }) => ($dirty ? '#fff' : 'rgba(255,255,255,0.2)')};
   cursor: ${({ $dirty }) => ($dirty ? 'pointer' : 'default')};
   font-size: 16px;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   &:hover {
     background: ${({ $dirty }) => ($dirty ? 'rgba(255,255,255,0.1)' : 'transparent')};
